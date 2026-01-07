@@ -13,7 +13,7 @@ from grid import Puzzle, Region, PlacedDomino, Orientation, ConstraintType
 class PuzzleRenderer:
     """Renders puzzles to PDF in NYT Pips style."""
 
-    CELL_SIZE = 28  # Size of each grid cell in mm
+    CELL_SIZE = 27  # Size of each grid cell in mm (~1.06 inches, fits 1" domino with visible borders)
 
     # NYT-style pastel color palette (RGB)
     REGION_COLORS = [
@@ -29,18 +29,18 @@ class PuzzleRenderer:
         (215, 210, 225),  # Periwinkle
     ]
 
-    # Darker versions for borders (matching region colors)
+    # Darker versions for borders (print-friendly, high contrast)
     BORDER_COLORS = [
-        (130, 100, 150),  # Purple
-        (200, 120, 130),  # Pink
-        (200, 150, 100),  # Orange
-        (100, 150, 140),  # Teal
-        (100, 130, 160),  # Gray-blue
-        (170, 140, 100),  # Tan
-        (130, 160, 110),  # Green
-        (180, 130, 150),  # Rose
-        (140, 140, 130),  # Gray
-        (140, 130, 170),  # Periwinkle
+        (90, 60, 120),    # Purple (darkened)
+        (160, 80, 90),    # Pink (darkened)
+        (170, 110, 60),   # Orange (darkened)
+        (60, 110, 100),   # Teal (darkened)
+        (60, 90, 130),    # Gray-blue (darkened)
+        (140, 100, 60),   # Tan (darkened)
+        (90, 130, 70),    # Green (darkened)
+        (150, 90, 110),   # Rose (darkened)
+        (100, 100, 90),   # Gray (darkened)
+        (100, 90, 140),   # Periwinkle (darkened)
     ]
 
     # Badge colors (more saturated versions)
@@ -262,8 +262,8 @@ class PuzzleRenderer:
         # Draw filled polygon
         self.pdf.polygon(points, style='F')
 
-        # Draw black text for readability on light backgrounds
-        self.pdf.set_text_color(40, 40, 40)
+        # Draw white text for contrast on colored backgrounds
+        self.pdf.set_text_color(255, 255, 255)
         font_size = max(7, int(size * 0.875))  # Scale font with badge size (25% larger)
         self.pdf.set_font('Helvetica', 'B', font_size)
 
@@ -531,20 +531,30 @@ class PuzzleRenderer:
                 y = y_start + r * cell_size
                 self.pdf.rect(x, y, cell_size, cell_size, style='F')
 
+        # Draw internal grid lines (thin solid grey for cell boundaries)
+        # This ensures kids can see exactly where to place domino tiles
+        self.pdf.set_draw_color(160, 160, 160)  # Medium grey
+        self.pdf.set_line_width(0.3 * scale)  # Thin but visible
+        for (r, c) in cell_region.keys():
+            x = x_start + c * cell_size
+            y = y_start + r * cell_size
+            # Draw all four edges of every cell
+            self.pdf.rect(x, y, cell_size, cell_size, style='D')
+
         # Collect all unique edges with their bordering regions
         # Edge key: (x1, y1, x2, y2) normalized so (x1,y1) < (x2,y2)
         edges: Dict[Tuple[float, float, float, float], List[int]] = {}
 
         def get_region_border_info(region_id):
-            """Get border color and style for a region."""
+            """Get border color and style for a region (print-optimized)."""
             region = self.puzzle.regions[region_id]
             is_empty = (region.constraint_type == ConstraintType.SUM and
                        region.target_value is None)
             if is_empty:
-                return (180, 175, 170), 0.8, 1.5, 2.5  # color, width, dash, gap
+                return (140, 135, 130), 1.0, 1.5, 2.5  # color, width, dash, gap (darker gray)
             else:
                 color = self.BORDER_COLORS[region_id % len(self.BORDER_COLORS)]
-                return color, 1.2, 3, 3
+                return color, 1.5, 3, 3  # Thicker line for print visibility
 
         for region in self.puzzle.regions:
             for (r, c) in region.cells:
@@ -871,9 +881,11 @@ class PuzzleRenderer:
         # Page 1: Grid (no label - clean for solving)
         self.pdf.add_page()
 
-        # Grid (centered)
-        grid_x = (page_w - grid_width) / 2
-        grid_y = 25
+        # Grid (centered with printer safety margins)
+        # Badges extend ~10mm beyond grid, need ~15mm from page edge = 25mm minimum
+        safety_margin = 25
+        grid_x = max(safety_margin, (page_w - grid_width) / 2)
+        grid_y = safety_margin + 10  # Extra top margin for any top badges
 
         self.draw_grid(grid_x, grid_y, with_solution=False)
 
