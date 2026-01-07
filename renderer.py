@@ -881,11 +881,13 @@ class PuzzleRenderer:
         # Page 1: Grid (no label - clean for solving)
         self.pdf.add_page()
 
-        # Grid (centered with printer safety margins)
-        # Badges extend ~10mm beyond grid, need ~15mm from page edge = 25mm minimum
-        safety_margin = 25
-        grid_x = max(safety_margin, (page_w - grid_width) / 2)
-        grid_y = safety_margin + 10  # Extra top margin for any top badges
+        # Grid (centered both horizontally and vertically)
+        # Account for badge overhang (~10mm beyond grid edges)
+        badge_overhang = 10
+        total_content_height = grid_height + 2 * badge_overhang
+
+        grid_x = (page_w - grid_width) / 2
+        grid_y = (page_h - grid_height) / 2  # True vertical center
 
         self.draw_grid(grid_x, grid_y, with_solution=False)
 
