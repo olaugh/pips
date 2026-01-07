@@ -5,4 +5,4 @@ venv/
 *.html
 output/
 puzzle_gen
-*.txt
+*_results.txt

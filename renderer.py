@@ -660,18 +660,44 @@ class PuzzleRenderer:
                     pos = end_pos
                     color_idx = 1 - color_idx  # Alternate colors
 
-        # Draw placed pips if showing solution
+        # Draw placed dominoes if showing solution
         if with_solution and self.puzzle.solution:
             for placement in self.puzzle.solution:
                 cells = placement.cells()
-                # First cell gets low value
                 r1, c1 = cells[0]
+                r2, c2 = cells[1]
+
+                # Calculate domino bounding box
+                min_r, max_r = min(r1, r2), max(r1, r2)
+                min_c, max_c = min(c1, c2), max(c1, c2)
+
+                x = x_start + min_c * cell_size
+                y = y_start + min_r * cell_size
+                w = (max_c - min_c + 1) * cell_size
+                h = (max_r - min_r + 1) * cell_size
+
+                # Draw domino outline (rounded rect with subtle border)
+                inset = 1.5 * scale
+                self.pdf.set_draw_color(120, 120, 120)
+                self.pdf.set_line_width(1.0 * scale)
+                self._draw_rounded_rect(x + inset, y + inset, w - 2*inset, h - 2*inset,
+                                       3 * scale, fill=False, stroke=True)
+
+                # Draw divider line between the two halves
+                self.pdf.set_draw_color(150, 150, 150)
+                self.pdf.set_line_width(0.5 * scale)
+                if r1 == r2:  # Horizontal domino
+                    mid_x = x + cell_size
+                    self.pdf.line(mid_x, y + inset + 2*scale, mid_x, y + h - inset - 2*scale)
+                else:  # Vertical domino
+                    mid_y = y + cell_size
+                    self.pdf.line(x + inset + 2*scale, mid_y, x + w - inset - 2*scale, mid_y)
+
+                # Draw pips
                 x1 = x_start + c1 * cell_size
                 y1 = y_start + r1 * cell_size
                 self.draw_pips_in_cell(x1, y1, cell_size, placement.domino.low)
 
-                # Second cell gets high value
-                r2, c2 = cells[1]
                 x2 = x_start + c2 * cell_size
                 y2 = y_start + r2 * cell_size
                 self.draw_pips_in_cell(x2, y2, cell_size, placement.domino.high)
