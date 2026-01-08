@@ -75,6 +75,14 @@ class PuzzleRenderer:
         self.puzzle = puzzle
         self.pdf = FPDF(orientation='P', unit='mm', format='letter')
         self.pdf.set_auto_page_break(auto=False)
+        # Add Unicode font for special characters like ≠
+        import os
+        font_path = os.path.join(os.path.dirname(__file__), 'DejaVuSans-Bold.ttf')
+        if os.path.exists(font_path):
+            self.pdf.add_font('DejaVu', '', font_path)
+            self.unicode_font = 'DejaVu'
+        else:
+            self.unicode_font = None
 
     def _draw_rounded_rect(self, x: float, y: float, w: float, h: float,
                            r: float, fill: bool = True, stroke: bool = True):
@@ -265,7 +273,11 @@ class PuzzleRenderer:
         # Draw white text for contrast on colored backgrounds
         self.pdf.set_text_color(255, 255, 255)
         font_size = max(7, int(size * 0.875))  # Scale font with badge size (25% larger)
-        self.pdf.set_font('Helvetica', 'B', font_size)
+        # Use Unicode font if available (for ≠ symbol), otherwise Helvetica
+        if self.unicode_font:
+            self.pdf.set_font(self.unicode_font, '', font_size)
+        else:
+            self.pdf.set_font('Helvetica', 'B', font_size)
 
         # Center text in the semicircle part
         text_w = self.pdf.get_string_width(label)
@@ -734,7 +746,7 @@ class PuzzleRenderer:
             elif region.constraint_type == ConstraintType.GREATER:
                 label = ">"
             elif region.constraint_type == ConstraintType.UNEQUAL:
-                label = "!="
+                label = "≠"
             else:
                 label = "?"
 
@@ -876,6 +888,11 @@ class PuzzleRenderer:
         orientation = 'L' if use_landscape else 'P'
         self.pdf = FPDF(orientation=orientation, unit='mm', format='letter')
         self.pdf.set_auto_page_break(auto=False)
+        # Re-add Unicode font for the new PDF instance
+        import os
+        font_path = os.path.join(os.path.dirname(__file__), 'DejaVuSans-Bold.ttf')
+        if os.path.exists(font_path):
+            self.pdf.add_font('DejaVu', '', font_path)
 
         page_w = landscape_w if use_landscape else portrait_w
         page_h = landscape_h if use_landscape else portrait_h
