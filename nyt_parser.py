@@ -46,6 +46,8 @@ def parse_nyt_puzzle(nyt_data: dict, difficulty: str = "easy") -> Puzzle:
             constraint = ConstraintType.SUM
         elif region_type == "equals":
             constraint = ConstraintType.EQUAL
+        elif region_type == "unequal":
+            constraint = ConstraintType.UNEQUAL
         elif region_type == "empty":
             # Empty means no constraint - we'll use SUM with None target
             constraint = ConstraintType.SUM

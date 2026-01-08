@@ -34,6 +34,7 @@ class PlacedDomino:
 class ConstraintType(Enum):
     SUM = 'sum'           # Total pips = target value
     EQUAL = 'equal'       # All pips in region are the same value
+    UNEQUAL = 'unequal'   # All pips in region are different values
     GREATER = 'greater'   # Sum > linked region's sum
     LESS = 'less'         # Sum < linked region's sum
 

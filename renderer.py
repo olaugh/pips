@@ -733,6 +733,8 @@ class PuzzleRenderer:
                     label = "<"
             elif region.constraint_type == ConstraintType.GREATER:
                 label = ">"
+            elif region.constraint_type == ConstraintType.UNEQUAL:
+                label = "!="
             else:
                 label = "?"
 
